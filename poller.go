@@ -29,7 +29,8 @@ func (p *poller) getJob(conn *RedisConn) (*job, error) {
 
 		reply, err := conn.Do("LPOP", fmt.Sprintf("%squeue:%s", namespace, queue))
 		if err != nil {
-			return nil, err
+			logger.Criticalf("Error getting from queue:%s!  squelched",queue)
+			continue
 		}
 		if reply != nil {
 			logger.Debugf("Found job on %s", queue)
@@ -69,7 +70,7 @@ func (p *poller) poll(interval time.Duration, quit <-chan bool) <-chan *job {
 		defer func() {
 			close(jobs)
 
-			conn, err := GetConn()
+			conn, erir := GetConn()
 			if err != nil {
 				logger.Criticalf("Error on getting connection in poller %s", p)
 				return
